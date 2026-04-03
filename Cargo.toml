@@ -1,0 +1,41 @@
+[package]
+name = "cargo-x-do"
+version = "0.1.0-dev.1"
+authors = ["Jan Roman Cisowski „j-Cis”"]
+edition = "2024"
+rust-version = "1.94.1"
+description = "A modular, cross-platform task runner and workflow orchestrator for Rust projects. Automates git versioning, diagnostics, and project snapshots via local TOML configurations."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/j-Cis/cargo-x-do"
+documentation = "https://docs.rs/cargo-x-do"
+
+# Tematy ułatwiające wyszukiwanie (max 5)
+keywords = ["cargo-subcommand", "task-runner", "workflow", "automation", "dev-tools"]
+
+# Oficjalne kategorie crates.io
+categories = ["development-tools", "development-tools::cargo-plugins"]
+resolver = "3"
+
+[package.metadata.cargo]
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.102"
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "1.1.2"
+
+# ==========================================
+# Globalna konfiguracja lintów (Analiza kodu)
+# ==========================================
+[lints.rust]
+# Kategorycznie zabraniamy używania bloków `unsafe` w całym projekcie
+unsafe_code = "forbid"
+# Ostrzegamy o nieużywanych importach, zmiennych i funkcjach
+# unused = "warn"
+#
+[lints.clippy]
+# Włączamy surowsze reguły, ale jako ostrzeżenia (nie zepsują kompilacji)
+# pedantic = "warn"
+# Możemy tu też wyciszyć globalnie to, co nas irytuje (opcjonalnie):
+too_many_arguments = "allow"
