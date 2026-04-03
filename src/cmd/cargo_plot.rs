@@ -1,3 +1,5 @@
+pub mod init;
+
 use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use std::fs;
@@ -35,6 +37,7 @@ struct Settings {
 
 /// 【ENG】 Main entry point for 'plot' module / 【POL】 Główny punkt wejścia dla modułu 'plot'
 pub fn handle(task_id: Option<&str>) -> Result<()> {
+	init::ensure_config()?;
     check_config()?;
 
     match task_id {
