@@ -1,16 +1,18 @@
+use std::{fs, path::Path};
+
 use anyhow::{Context, Result};
-use std::fs;
-use std::path::Path;
 
 #[allow(clippy::too_many_lines)]
 pub fn ensure_config(config_path: &str, output_path: &str) -> Result<()> {
-    if Path::new(config_path).exists() { return Ok(()); }
-    
-    if !Path::new(output_path).exists() {
-        fs::create_dir_all(output_path).context("Failed to create logs directory")?;
-    }
+	if Path::new(config_path).exists() {
+		return Ok(());
+	}
 
-    let template = r#"# Corrections (Writing & Committing)
+	if !Path::new(output_path).exists() {
+		fs::create_dir_all(output_path).context("Failed to create logs directory")?;
+	}
+
+	let template = r#"# Corrections (Writing & Committing)
 git_commit = "per-task" # "single", "none"
 commit_message = "before: apply automatic fix/fmt"
 
@@ -54,8 +56,7 @@ commit_message = "before: format with rustfmt"
 description = "【ENG】 Direct rustfmt / 【POL】 Bezpośrednie rustfmt"
 "#;
 
-
-    fs::write(config_path, template).context("Init failed: corrections")?;
-    println!("✨ 【ENG】 Created / 【POL】 Utworzono: {config_path}");
-    Ok(())
+	fs::write(config_path, template).context("Init failed: corrections")?;
+	println!("✨ 【ENG】 Created / 【POL】 Utworzono: {config_path}");
+	Ok(())
 }

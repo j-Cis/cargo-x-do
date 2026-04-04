@@ -1,16 +1,18 @@
+use std::{fs, path::Path};
+
 use anyhow::{Context, Result};
-use std::fs;
-use std::path::Path;
 
 #[allow(clippy::too_many_lines)]
 pub fn ensure_config(config_path: &str, output_path: &str) -> Result<()> {
-    if Path::new(config_path).exists() { return Ok(()); }
-    
-    if !Path::new(output_path).exists() {
-        fs::create_dir_all(output_path).context("Failed to create logs directory")?;
-    }
+	if Path::new(config_path).exists() {
+		return Ok(());
+	}
 
-    let template = r#"# Observation (Read-only)
+	if !Path::new(output_path).exists() {
+		fs::create_dir_all(output_path).context("Failed to create logs directory")?;
+	}
+
+	let template = r#"# Observation (Read-only)
 [[cargo-fmt]] # --check - domyślne bo jesteśmy w Observation
 args = []
 id = "oA1"
@@ -135,7 +137,7 @@ output = "target/.x-do/logs/err/verify.log"
 description = "【ENG】 Verify Cargo.toml / 【POL】 Weryfikacja Cargo.toml"
 "#;
 
-    fs::write(config_path, template).context("Init failed: observation")?;
-    println!("✨ 【ENG】 Created / 【POL】 Utworzono: {config_path}");
-    Ok(())
+	fs::write(config_path, template).context("Init failed: observation")?;
+	println!("✨ 【ENG】 Created / 【POL】 Utworzono: {config_path}");
+	Ok(())
 }
