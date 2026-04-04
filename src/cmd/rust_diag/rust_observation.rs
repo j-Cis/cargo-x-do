@@ -1,38 +1,25 @@
-use std::{
-	fs::{self, File},
-	process::{Command, Stdio},
-};
-
-use anyhow::{/*bail,*/ Context, Result};
+use std::fs::{self, File};
+use std::process::{Command, Stdio};
+use anyhow::{Context, Result};
 use serde::Deserialize;
 
-use crate::{
-	cmd::rust_diag::{Task, push_tasks},
-	shared::AbstractWorkflowModule,
-};
+// Precyzyjne importy z crate root
+use crate::cmd::rust_diag::{Task, push_tasks};
+use crate::shared::AbstractWorkflowModule;
 
 pub mod init;
 
 #[derive(Deserialize)]
 struct ObsConfig {
-	#[serde(rename = "cargo-fmt")]
-	pub fmt: Option<Vec<Task>>,
-	#[serde(rename = "cargo-check")]
-	pub check: Option<Vec<Task>>,
-	#[serde(rename = "cargo-clippy")]
-	pub clippy: Option<Vec<Task>>,
-	#[serde(rename = "cargo-audit")]
-	pub audit: Option<Vec<Task>>,
-	#[serde(rename = "cargo-doc")]
-	pub doc: Option<Vec<Task>>,
-	#[serde(rename = "cargo-build")]
-	pub build: Option<Vec<Task>>,
-	#[serde(rename = "cargo-test")]
-	pub test: Option<Vec<Task>>,
-	#[serde(rename = "cargo-package")]
-	pub package: Option<Vec<Task>>,
-	#[serde(rename = "cargo-verify-project")]
-	pub verify: Option<Vec<Task>>,
+	#[serde(rename = "cargo-fmt")] pub fmt: Option<Vec<Task>>,
+	#[serde(rename = "cargo-check")] pub check: Option<Vec<Task>>,
+	#[serde(rename = "cargo-clippy")] pub clippy: Option<Vec<Task>>,
+	#[serde(rename = "cargo-audit")] pub audit: Option<Vec<Task>>,
+	#[serde(rename = "cargo-doc")] pub doc: Option<Vec<Task>>,
+	#[serde(rename = "cargo-build")] pub build: Option<Vec<Task>>,
+	#[serde(rename = "cargo-test")] pub test: Option<Vec<Task>>,
+	#[serde(rename = "cargo-package")] pub package: Option<Vec<Task>>,
+	#[serde(rename = "cargo-verify-project")] pub verify: Option<Vec<Task>>,
 }
 
 pub struct ObservationModule;
@@ -47,13 +34,13 @@ impl AbstractWorkflowModule for ObservationModule {
 		if force && std::path::Path::new(Self::CONFIG_PATH).exists() {
 			fs::remove_file(Self::CONFIG_PATH).context("Failed to delete old config")?;
 		}
-		init::ensure_config(Self::CONFIG_PATH, Self::OUTPUT_PATH)?; // Wywołuje Twoją dotychczasową funkcję z init.rs
+		init::ensure_config(Self::CONFIG_PATH, Self::OUTPUT_PATH)?;
 		Ok(())
 	}
 
 	fn load_tasks(&self) -> Result<Vec<Self::Task>> {
 		let content = fs::read_to_string(Self::CONFIG_PATH)
-			.with_context(|| format!("Failed to read {}", Self::CONFIG_PATH))?;
+			.with_context(|| format!("Failed to read {path}", path = Self::CONFIG_PATH))?;
 		let raw: ObsConfig = toml::from_str(&content).context("Failed to parse TOML")?;
 
 		let mut tasks = Vec::new();
@@ -73,7 +60,8 @@ impl AbstractWorkflowModule for ObservationModule {
 	fn print_list(&self, tasks: &[Self::Task]) {
 		println!("📋 【ENG】 Observation Tasks / 【POL】 Zadania Obserwacji:");
 		for t in tasks {
-			println!("  - {:<4} | [{:02}] {}", t.id, t.order, t.name);
+			use crate::shared::AbstractExecutableTask;
+			println!("  - {:<4} | [{:02}] {}", t.id(), t.order(), t.name());
 		}
 	}
 
@@ -84,14 +72,11 @@ impl AbstractWorkflowModule for ObservationModule {
 		final_args.extend(task.args.clone());
 
 		let mut cmd = Command::new(&task.binary);
-			
-		cmd.env_remove("RUSTUP_TOOLCHAIN"); 
+		cmd.env_remove("RUSTUP_TOOLCHAIN"); // Fix dla nightly
 		cmd.args(&final_args);
 
 		if let Some(out_path) = &task.output {
-			if let Some(p) = std::path::Path::new(out_path).parent() {
-				fs::create_dir_all(p)?;
-			}
+			if let Some(p) = std::path::Path::new(out_path).parent() { fs::create_dir_all(p)?; }
 			let f = File::create(out_path)?;
 			cmd.stdout(Stdio::from(f.try_clone()?)).stderr(Stdio::from(f));
 		}
@@ -100,11 +85,10 @@ impl AbstractWorkflowModule for ObservationModule {
 		if status.success() {
 			println!("✅ OK.");
 		} else {
-			println!("⚠️  Problem wykryty w: {}", task.name);
+			println!("⚠️  Problem wykryty w: {name}", name = task.name);
 		}
 		Ok(())
 	}
 }
 
-// Globalny punkt wejścia przekazuje wywołanie do trait-a
 pub fn handle(arg: Option<&str>) -> Result<()> { ObservationModule.handle(arg) }

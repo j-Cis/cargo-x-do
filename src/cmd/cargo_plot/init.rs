@@ -1,18 +1,13 @@
-use std::{fs, path::Path};
-
 use anyhow::{Context, Result};
+use std::fs;
+use std::path::Path;
 
-const CONFIG_PATH: &str = "./.x-do/cargo-plot.toml";
-const OUTPUT_PATH: &str = "./target/.x-do/code/";
-
-/// 【ENG】 Creates default cargo-plot.toml if missing / 【POL】 Tworzy domyślny cargo-plot.toml jeśli brakuje
-pub fn ensure_config() -> Result<()> {
-	if Path::new(CONFIG_PATH).exists() {
-		return Ok(());
-	}
-	if !Path::new(OUTPUT_PATH).exists() {
-		fs::create_dir_all(OUTPUT_PATH).context("Failed to create logs directory")?;
-	}
+pub fn ensure_config(config_path: &str, output_path: &str) -> Result<()> {
+    if Path::new(config_path).exists() { return Ok(()); }
+    
+    if !Path::new(output_path).exists() {
+        fs::create_dir_all(output_path).context("Failed to create plots directory")?;
+    }
 
 	// Używamy Twoich precyzyjnych ustawień dla Snapshot-Rust
 	let template = r#"[[task]]
@@ -34,10 +29,7 @@ clean_before_run = true
 silent = false
 "#;
 
-	fs::write(CONFIG_PATH, template).with_context(|| {
-		format!("【ENG】 Init failed / 【POL】 Błąd inicjalizacji: {}", CONFIG_PATH)
-	})?;
-
-	println!("✨ 【ENG】 Created / 【POL】 Utworzono: {}", CONFIG_PATH);
-	Ok(())
+	fs::write(config_path, template).context("Init failed: cargo-plot")?;
+    println!("✨ 【ENG】 Created / 【POL】 Utworzono: {config_path}");
+    Ok(())
 }

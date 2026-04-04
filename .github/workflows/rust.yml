@@ -1,0 +1,82 @@
+# Plik konfiguracyjny CI (Continuous Integration) dla narzędzia cargo-plot.
+# Odpowiada za automatyczne sprawdzanie formatowania, lintowanie (Clippy) oraz testy.
+# Buduje wersje binarne dla systemów Windows i Linux przy każdym wypchnięciu kodu.
+# Zapewnia wysoką jakość i stabilność kodu źródłowego w gałęzi głównej.
+
+name: Rust CI & Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Gwarantuje obecność clippy i rustfmt
+    - name: Update Rust Toolchain
+      run: rustup update stable && rustup default stable && rustup component add clippy rustfmt
+
+    # Zależności graficzne niezbędne do kompilacji Slint GUI na Linuxie
+    - name: Install Linux Dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libx11-dev libssl-dev libfontconfig1-dev libxkbcommon-dev
+
+    # Pamięć podręczna w najnowszej wersji v4 (przyspiesza budowanie)
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    # 1. Sprawdzanie formatowania
+    - name: Check Formatting
+      run: cargo fmt -- --check
+
+    # 2. Sprawdzanie jakości kodu (Linter Clippy)
+    - name: Lint with Clippy
+      run: cargo clippy -- -D warnings
+
+    # 3. Uruchomienie testów
+    - name: Run tests
+      run: cargo test --verbose
+
+    # 4. Budowanie wersji produkcyjnej (Release)
+    - name: Build Release
+      run: cargo build --release --verbose
+
+    # 5. Wyciągnięcie gotowego pliku .exe (Windows)
+    - name: Upload Windows Artifact
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: cargo-plot-windows
+        path: target/release/cargo-plot.exe
+
+    # 6. Wyciągnięcie gotowego pliku binarnego (Linux)
+    - name: Upload Linux Artifact
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: cargo-plot-linux
+        path: target/release/cargo-plot
