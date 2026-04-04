@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::shared::AbstractExecutableTask;
+
 pub mod rust_observation;
 pub mod rust_corrections;
 
@@ -23,6 +25,12 @@ pub struct Task {
     pub binary: String,
     #[serde(skip)]
     pub base_args: Vec<String>,
+}
+
+impl AbstractExecutableTask for Task {
+    fn id(&self) -> &str { &self.id }
+    fn name(&self) -> &str { &self.name }
+    fn order(&self) -> i32 { self.order }
 }
 
 // Funkcja pomocnicza do budowania płaskiej listy zadań

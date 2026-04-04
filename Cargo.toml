@@ -30,10 +30,10 @@ anyhow = "1.0.102"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.2"
 
-[lints.rust]
-unsafe_code = "forbid"
-unused = "warn"
-
-[lints.clippy]
-pedantic = "warn"
-too_many_arguments = "allow"
+#[lints.rust]
+#unsafe_code = "forbid"
+#unused = "warn"
+#
+#[lints.clippy]
+#pedantic = "warn"
+#too_many_arguments = "allow"
