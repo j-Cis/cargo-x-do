@@ -1,14 +1,11 @@
 // src\shared\fs.rs
 
-use std::collections::HashMap;
-use std::fs;
+use std::{collections::HashMap, fs, io::Write, path::PathBuf};
+
 // use serde::Deserialize;
 use anyhow::{Context, Result};
 use chrono::Local;
-use std::io::Write;
-use std::path::PathBuf;
-use toml;
-use toml::Value;
+use toml::{self, Value};
 
 #[allow(dead_code)]
 pub trait DefaultSettings {
@@ -173,20 +170,19 @@ pub trait DefaultSettings {
 		// przetwórz anchor: np. "[[task]]" → "task"
 		let anchor_key = anchor.trim_matches(|c| c == '[' || c == ']');
 
-		if let Some(items) = value.get(anchor_key) {
-			if let Value::Array(arr) = items {
-				// wybieramy pole do wyszukania
-				let field_to_search = if key_is_id { "id" } else { "name" };
+		if let Some(items) = value.get(anchor_key)
+			&& let Value::Array(arr) = items
+		{
+			// wybieramy pole do wyszukania
+			let field_to_search = if key_is_id { "id" } else { "name" };
 
-				for item in arr {
-					if let Value::Table(table) = item {
-						if let Some(Value::String(s)) = table.get(field_to_search) {
-							if s == key_value {
-								// jeśli znaleziono dopasowanie, zwracamy cały fragment
-								return Ok(item.clone());
-							}
-						}
-					}
+			for item in arr {
+				if let Value::Table(table) = item
+					&& let Some(Value::String(s)) = table.get(field_to_search)
+					&& s == key_value
+				{
+					// jeśli znaleziono dopasowanie, zwracamy cały fragment
+					return Ok(item.clone());
 				}
 			}
 		}
@@ -200,7 +196,7 @@ pub trait DefaultSettings {
 		);
 	}
 
-	/// Zwraca wszystkie elementy danego anchoru jako Vec<Value>
+	/// Zwraca wszystkie elementy danego anchoru jako `Vec<Value>`
 	fn get_all_by_anchor(file: &str, anchor: &str) -> Result<Vec<Value>> {
 		let path = Self::build_path_set(file);
 		println!("get_all_by_anchor: {:?}", path);
@@ -216,17 +212,17 @@ pub trait DefaultSettings {
 		// "[[task]]" → "task"
 		let anchor_key = anchor.trim_matches(|c| c == '[' || c == ']');
 
-		if let Some(items) = value.get(anchor_key) {
-			if let Value::Array(arr) = items {
-				// zwracamy wszystkie elementy jako Vec<Value>
-				return Ok(arr.clone());
-			}
+		if let Some(items) = value.get(anchor_key)
+			&& let Value::Array(arr) = items
+		{
+			// zwracamy wszystkie elementy jako Vec<Value>
+			return Ok(arr.clone());
 		}
 
 		anyhow::bail!("No anchor {} found in {:?}", anchor, path);
 	}
 
-	/// Zwraca wszystkie elementy dla wielu anchorów jako jeden Vec<Value>
+	/// Zwraca wszystkie elementy dla wielu anchorów jako jeden `Vec<Value>`
 	fn get_all_by_all_anchor(file: &str, anchors: &[&str]) -> Result<Vec<Value>> {
 		let path = Self::build_path_set(file);
 		println!("get_all_by_all_anchor: {:?}", path);
@@ -242,10 +238,10 @@ pub trait DefaultSettings {
 		for &anchor in anchors {
 			let anchor_key = anchor.trim_matches(|c| c == '[' || c == ']');
 
-			if let Some(items) = value.get(anchor_key) {
-				if let Value::Array(arr) = items {
-					results.extend(arr.clone()); // ← kluczowe
-				}
+			if let Some(items) = value.get(anchor_key)
+				&& let Value::Array(arr) = items
+			{
+				results.extend(arr.clone()); // ← kluczowe
 			}
 		}
 
@@ -278,27 +274,27 @@ pub trait DefaultSettings {
 			// anchor = np. "[[task]]" → usuwamy [] i dostajemy "task"
 			let key = anchor.trim_matches(|c| c == '[' || c == ']');
 
-			if let Some(items) = value.get(key) {
-				if let toml::Value::Array(arr) = items {
-					for item in arr {
-						let mut map = HashMap::new();
-						if let toml::Value::Table(table) = item {
-							for &k in keys_by_anchors {
-								if let Some(v) = table.get(k) {
-									// konwertujemy wszystko na String
-									let s = match v {
-										toml::Value::String(s) => s.clone(),
-										toml::Value::Integer(i) => i.to_string(),
-										toml::Value::Float(f) => f.to_string(),
-										toml::Value::Boolean(b) => b.to_string(),
-										_ => continue, // ignorujemy tablice, inne struktury
-									};
-									map.insert(k.to_string(), s);
-								}
+			if let Some(items) = value.get(key)
+				&& let toml::Value::Array(arr) = items
+			{
+				for item in arr {
+					let mut map = HashMap::new();
+					if let toml::Value::Table(table) = item {
+						for &k in keys_by_anchors {
+							if let Some(v) = table.get(k) {
+								// konwertujemy wszystko na String
+								let s = match v {
+									toml::Value::String(s) => s.clone(),
+									toml::Value::Integer(i) => i.to_string(),
+									toml::Value::Float(f) => f.to_string(),
+									toml::Value::Boolean(b) => b.to_string(),
+									_ => continue, // ignorujemy tablice, inne struktury
+								};
+								map.insert(k.to_string(), s);
 							}
 						}
-						results.push(map);
 					}
+					results.push(map);
 				}
 			}
 		}
@@ -322,26 +318,26 @@ pub trait DefaultSettings {
 		for &anchor in anchors {
 			let key = anchor.trim_matches(|c| c == '[' || c == ']');
 
-			if let Some(items) = value.get(key) {
-				if let Value::Array(arr) = items {
-					for item in arr {
-						if let Value::Table(table) = item {
-							// tworzę tymczasową mapę tylko do wypisania
-							let mut map = HashMap::new();
-							for &k in keys_by_anchors {
-								if let Some(v) = table.get(k) {
-									let s = match v {
-										Value::String(s) => s.clone(),
-										Value::Integer(i) => i.to_string(),
-										Value::Float(f) => f.to_string(),
-										Value::Boolean(b) => b.to_string(),
-										_ => continue,
-									};
-									map.insert(k.to_string(), s);
-								}
+			if let Some(items) = value.get(key)
+				&& let Value::Array(arr) = items
+			{
+				for item in arr {
+					if let Value::Table(table) = item {
+						// tworzę tymczasową mapę tylko do wypisania
+						let mut map = HashMap::new();
+						for &k in keys_by_anchors {
+							if let Some(v) = table.get(k) {
+								let s = match v {
+									Value::String(s) => s.clone(),
+									Value::Integer(i) => i.to_string(),
+									Value::Float(f) => f.to_string(),
+									Value::Boolean(b) => b.to_string(),
+									_ => continue,
+								};
+								map.insert(k.to_string(), s);
 							}
-							println!("{:?}", map); // wypisujemy od razu
 						}
+						println!("{:?}", map); // wypisujemy od razu
 					}
 				}
 			}

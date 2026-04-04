@@ -1,10 +1,13 @@
 // src\plugins\rust_checks.rs
 
+use std::{
+	fs::File,
+	process::{Command, Stdio},
+};
+
+use anyhow::{Context, Result, bail};
+
 use crate::shared::fs::DefaultSettings;
-use anyhow::Result;
-use anyhow::{Context, bail};
-use std::fs::File;
-use std::process::{Command, Stdio};
 
 struct Settings;
 
@@ -13,7 +16,7 @@ impl DefaultSettings for Settings {}
 
 // stałe wewnątrz struct
 impl Settings {
-	pub const CONFIG_INIT: &'static str = r#" 
+	pub const CONFIG_INIT: &'static str = r#"
 git_commit = "per-task" # "single", "none"
 when_commit = "before" # "after", "combo"
 message_before = "before: apply automatic fix/fmt"
@@ -62,12 +65,12 @@ description = "【ENG】 Direct rustfmt / 【POL】 Bezpośrednie rustfmt"
 	pub const CONFIG_FILE: &'static str = "rust-format.toml";
 	pub const DEFAULT_OUT: &'static str = "rust/";
 	pub const MENU_HELPER: &'static str = r#"
-▶️ cargo x-do (format || f)              
-▶️ cargo x-do (format || f) --help              
-▶️ cargo x-do (format || f) --init       
-▶️ cargo x-do (format || f) --init-force 
-▶️ cargo x-do (format || f) [id] 
-▶️ cargo x-do (format || f) [name]        
+▶️ cargo x-do (format || f)
+▶️ cargo x-do (format || f) --help
+▶️ cargo x-do (format || f) --init
+▶️ cargo x-do (format || f) --init-force
+▶️ cargo x-do (format || f) [id]
+▶️ cargo x-do (format || f) [name]
 ▶️ cargo x-do (format || f) --all
 "#;
 	pub const ANCHORS: [&'static str; 3] =
@@ -163,7 +166,7 @@ fn run_git_commit(msg: &str) -> Result<()> {
 /// Funkcja sortująca, zarządzająca Gitem dla trybu 'single' i odpalająca zadania
 fn handle_engine_for_all(
 	mut tasks: Vec<toml::Value>,
-	options: &Vec<(String, toml::Value)>,
+	options: &[(String, toml::Value)],
 ) -> Result<()> {
 	tasks.sort_by_key(|t| t.get("order").and_then(|v| v.as_integer()).unwrap_or(999));
 
@@ -212,7 +215,7 @@ fn handle_engine_for_all(
 }
 
 /// Funkcja wykonująca konkretne zadanie i zarządzająca Gitem TYLKO dla trybu 'per-task'
-fn handle_engine_for_one(task: toml::Value, options: &Vec<(String, toml::Value)>) -> Result<()> {
+fn handle_engine_for_one(task: toml::Value, options: &[(String, toml::Value)]) -> Result<()> {
 	let name = task.get("name").and_then(|v| v.as_str()).unwrap_or("Unknown");
 	let id = task.get("id").and_then(|v| v.as_str()).unwrap_or("??");
 	let output = task.get("output").and_then(|v| v.as_str());

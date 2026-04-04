@@ -1,10 +1,13 @@
 // src\plugins\rust_checks.rs
 
+use std::{
+	fs::File,
+	process::{Command, Stdio},
+};
+
+use anyhow::{Context, Result, bail};
+
 use crate::shared::fs::DefaultSettings;
-use anyhow::Result;
-use anyhow::{Context, bail};
-use std::fs::File;
-use std::process::{Command, Stdio};
 
 struct Settings;
 
@@ -13,8 +16,8 @@ impl DefaultSettings for Settings {}
 
 // stałe wewnątrz struct
 impl Settings {
-	pub const CONFIG_INIT: &'static str = r#" 
-[[cargo-fmt]] 
+	pub const CONFIG_INIT: &'static str = r#"
+[[cargo-fmt]]
 args = []
 id = "oA1"
 name = "check-fmt"
@@ -141,12 +144,12 @@ description = "【ENG】 Verify Cargo.toml / 【POL】 Weryfikacja Cargo.toml"
 	pub const CONFIG_FILE: &'static str = "rust-checks.toml";
 	pub const DEFAULT_OUT: &'static str = "rust/";
 	pub const MENU_HELPER: &'static str = r#"
-▶️ cargo x-do (check || c)              
-▶️ cargo x-do (check || c) --help              
-▶️ cargo x-do (check || c) --init       
-▶️ cargo x-do (check || c) --init-force 
-▶️ cargo x-do (check || c) [id] 
-▶️ cargo x-do (check || c) [name]        
+▶️ cargo x-do (check || c)
+▶️ cargo x-do (check || c) --help
+▶️ cargo x-do (check || c) --init
+▶️ cargo x-do (check || c) --init-force
+▶️ cargo x-do (check || c) [id]
+▶️ cargo x-do (check || c) [name]
 ▶️ cargo x-do (check || c) --all
 "#;
 	pub const ANCHORS: [&'static str; 9] = [

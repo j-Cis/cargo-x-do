@@ -1,12 +1,11 @@
 // src\plugins\cargo_plot.rs
 
-use crate::shared::fs::DefaultSettings;
+use std::{fs, path::Path, process::Command};
 
 use anyhow::{Context, Result, bail};
-use std::fs;
-use std::path::Path;
-use std::process::Command;
 use toml;
+
+use crate::shared::fs::DefaultSettings;
 struct Settings;
 
 // implementujemy trait
@@ -36,12 +35,12 @@ silent = false
 	pub const CONFIG_FILE: &'static str = "cargo-plot.toml";
 	pub const DEFAULT_OUT: &'static str = "code/";
 	pub const MENU_HELPER: &'static str = r#"
-▶️ cargo x-do plot              
-▶️ cargo x-do plot --help              
-▶️ cargo x-do plot --init       
-▶️ cargo x-do plot --init-force 
-▶️ cargo x-do plot [id] 
-▶️ cargo x-do plot [name] 
+▶️ cargo x-do plot
+▶️ cargo x-do plot --help
+▶️ cargo x-do plot --init
+▶️ cargo x-do plot --init-force
+▶️ cargo x-do plot [id]
+▶️ cargo x-do plot [name]
 "#;
 
 	pub const ANCHORS: [&'static str; 1] = ["[[task]]"];
@@ -116,7 +115,7 @@ fn handle_engine(task: toml::Value) -> Result<()> {
 		.unwrap_or_default();
 
 	// Pobieramy indeks 0 jako input (domyślnie "."), indeks 1 jako output
-	let input_folder = io.get(0).map(|s| s.as_str()).unwrap_or(".");
+	let input_folder = io.first().map(|s| s.as_str()).unwrap_or(".");
 	let output_folder = io.get(1).map(|s| s.as_str()).unwrap_or("./target/.x-do/code/");
 	// -----------------------
 
