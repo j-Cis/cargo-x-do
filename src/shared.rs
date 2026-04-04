@@ -1,3 +1,3 @@
-pub mod abstracts;
+// src\shared.rs
 
-pub use abstracts::{AbstractExecutableTask, AbstractWorkflowModule};
+pub mod fs;

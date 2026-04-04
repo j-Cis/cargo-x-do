@@ -1,6 +1,8 @@
-# Corrections (Writing & Committing)
+ 
 git_commit = "per-task" # "single", "none"
-commit_message = "before: apply automatic fix/fmt"
+when_commit = "before" # "after", "combo"
+message_before = "before: apply automatic fix/fmt"
+message_after = "after: apply automatic fix/fmt"
 
 [[trim-whitespace]]
 args = []
@@ -16,27 +18,27 @@ args = ["--allow-dirty"]
 id = "cB1"
 name = "clippy-fix"
 order = 1
-output = "target/.x-do/logs/fmt/clippy-fix.log"
+output = "target/.x-do/rust/fmt/clippy-fix.log"
 git_commit = true
 commit_message = "before: apply clippy suggestions"
 description = "【ENG】 Apply clippy fixes / 【POL】 Zastosuj sugestie clippy"
 
-[[cargo-fmt-nightly]]
-args = ["--", "--check"]
-id = "cC1"
-name = "fmt-check"
-order = 2
-output = "target/.x-do/logs/fmt/fmt-check.log"
-git_commit = true
-commit_message = "before: format with nightly fmt"
-description = "【ENG】 Nightly formatting / 【POL】 Formatowanie wersją nightly"
+# [[cargo-fmt-nightly]]
+# args = ["--", "--check"]
+# id = "cC1"
+# name = "fmt-check"
+# order = 2
+# output = "target/.x-do/rust/fmt/fmt-check.log"
+# git_commit = true
+# commit_message = "before: format with nightly fmt"
+# description = "【ENG】 Nightly formatting / 【POL】 Formatowanie wersją nightly"
 
 [[rustfmt]]
-args = ["--edition", "2024"]
+args = []
 id = "cD1"
 name = "rustfmt"
 order = 3
-output = "target/.x-do/logs/fmt/rustfmt.log"
+output = "target/.x-do/rust/fmt/rustfmt.log"
 git_commit = true
 commit_message = "before: format with rustfmt"
 description = "【ENG】 Direct rustfmt / 【POL】 Bezpośrednie rustfmt"
