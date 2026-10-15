@@ -1,0 +1,18 @@
+# ./.cargo/x-do.toml
+
+title = "PROJECT SNAPSHOT v:"
+name = "MyProject_"
+output_dir = "./dump"
+max_single_file_size = 524288
+
+match_patterns = [
+    "./src/**",
+    "./Cargo.toml",
+    "!./target/**",
+    "!./dump/**"
+]
+
+content_skip = [
+    "*.svg",
+    "./assets/**"
+]

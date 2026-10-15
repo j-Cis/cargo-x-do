@@ -1,17 +1,18 @@
+# ./Cargo.toml
+
 [package]
 name = "cargo-x-do"
-version = "0.1.0-dev.2"
+version = "0.1.0-dev.4"
 authors = ["Jan Roman Cisowski „j-Cis”"]
 edition = "2024"
-rust-version = "1.94.1"
-description = "A modular, cross-platform task runner and workflow orchestrator for Rust projects. Automates git versioning, diagnostics, and project snapshots via local TOML configurations."
+description = ""
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/j-Cis/cargo-x-do"
 homepage = "https://crates.io/crates/cargo-x-do"
 documentation = "https://docs.rs/cargo-x-do"
 
-keywords = ["task", "build", "cargo", "plugin", "subcommand"]
+keywords = ["task", "cargo", "plugin", "subcommand", "rust"]
 categories = [
 	"command-line-utilities",
 	"development-tools",
@@ -25,11 +26,21 @@ resolver = "3"
 [package.metadata.cargo]
 edition = "2024"
 
+[[bin]]
+name = "cargo-x-do"
+path = "src/main.rs"
+
 [dependencies]
-anyhow = "1.0.102"
-chrono = "0.4.44"
-serde = { version = "1.0.228", features = ["derive"] }
-toml = "1.1.2"
+# anyhow = "1.0.102"
+# chrono = "0.4.44"
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1.8"
+crossterm = "0.29.0"
+inquire = "0.9.4"
+# Silnik migawek i analizy drzewa plików
+querypath = "1.0.0"
+querypath-fmt = "1.1.0"
+querypath-snapshot = "1.1.0"
 
 #[lints.rust]
 #unsafe_code = "forbid"

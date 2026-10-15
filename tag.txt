@@ -1,3 +1,4 @@
 $hash = git rev-parse --short HEAD   
->> git tag -a "v0.1.0-dev.1-$hash" -m "Release v0.1.0-dev.2 hash: $hash"                      
+  git tag -a "v0.1.0-dev.2-$hash" -m "Release v0.1.0-dev.2 hash: $hash"                      
 
+git push origin --tags  

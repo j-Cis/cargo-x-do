@@ -1,4 +1,4 @@
-# .cargo/config.toml
+# ./.cargo/config.toml
 
 # Wymuszenie statycznego linkowania bibliotek C (CRT) dla Windows.
 # Dzięki temu plik .exe będzie działał na czystym Windows 7/8/10/11
@@ -11,3 +11,7 @@ rustflags = ["-C", "target-feature=+crt-static"]
 # Konfiguracja dla starych systemów 32-bitowych (Stare laptopy, Windows XP/7 32-bit)
 [target.i686-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]
+
+[alias]
+x = "x-do"
+xtask = "x-do"
