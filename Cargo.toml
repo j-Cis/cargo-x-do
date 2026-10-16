@@ -2,7 +2,7 @@
 
 [package]
 name = "cargo-x-do"
-version = "0.1.0-dev.4"
+version = "0.1.0"
 authors = ["Jan Roman Cisowski „j-Cis” <code@cisowscy.com>"]
 edition = "2024"
 description = "Instant single-key TUI developer task runner, diagnostics, and code snapshot tool for Cargo."
@@ -25,6 +25,10 @@ resolver = "3"
 
 [package.metadata.cargo]
 edition = "2024"
+
+[lib]
+name = "cargo_x_do"
+path = "src/lib.rs"
 
 [[bin]]
 name = "cargo-x-do"

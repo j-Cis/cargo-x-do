@@ -1,0 +1,4 @@
+git status -s
+cargo clippy --all-targets -- -D warnings
+cargo check --all-targets
+cargo +nightly fmt --all
