@@ -302,16 +302,32 @@ fn tag_release_with_hash(is_dry_run: bool) {
         }
     };
 
-    let commit_msg = match inquire::Text::new("Wprowadź wiadomość commita wydania (np. 'docs: ...'):")
-        .with_default(&format!("Release v{}", version))
-        .prompt()
-    {
-        Ok(msg) => msg.trim().to_string(),
-        Err(_) => {
-            println!("Anulowano proces wydania.");
-            return;
+    // 1. WYŁĄCZAMY RAW MODE - przywracamy normalny terminal przed pobraniem tekstu
+    let _ = terminal::disable_raw_mode();
+    let _ = execute!(std::io::stdout(), cursor::Show);
+
+    println!("\r\n📝 Wprowadź/wklej wiadomość commita (naciśnij Enter w pustej linii, aby zakończyć):");
+    let mut lines = Vec::new();
+    let stdin = std::io::stdin();
+
+    loop {
+        let mut buffer = String::new();
+        if stdin.read_line(&mut buffer).is_err() {
+            break;
         }
-    };
+        let trimmed = buffer.trim_end_matches(['\r', '\n']);
+        if trimmed.is_empty() {
+            break; // Pusta linia (podwójny Enter) kończy wklejanie
+        }
+        lines.push(trimmed.to_string());
+    }
+
+    let commit_msg = lines.join("\n");
+
+    if commit_msg.trim().is_empty() {
+        println!("Wiadomość pusta, anulowano proces wydania.\r\n");
+        return;
+    }
 
     if is_dry_run {
         println!("> [DRY RUN] 🔒 Wykonałbym pełen łańcuch wydania:");
@@ -355,21 +371,17 @@ fn tag_release_with_hash(is_dry_run: bool) {
         .args(["tag", "-a", &tag_name, "-m", &tag_msg])
         .status();
 
-    if let Ok(st) = status_tag {
-        if st.success() {
-            println!("🚀 Wysyłanie gałęzi głównej wraz z powiązanymi tagami (git push origin main --follow-tags)...");
-            let _ = Command::new("git").args(["push", "origin", "main", "--follow-tags"]).status();
+    if let Ok(st) = status_tag && st.success() {
+        println!("🚀 Wysyłanie gałęzi głównej wraz z powiązanymi tagami (git push origin main --follow-tags)...");
+        let _ = Command::new("git").args(["push", "origin", "main", "--follow-tags"]).status();
 
-            println!("🚀 Weryfikacja wysłania wszystkich tagów (git push origin --tags)...");
-            let _ = Command::new("git").args(["push", "origin", "--tags"]).status();
+        println!("🚀 Weryfikacja wysłania wszystkich tagów (git push origin --tags)...");
+        let _ = Command::new("git").args(["push", "origin", "--tags"]).status();
 
-            crate::last_and_history::add_to_history("git", &["push", "origin", "main", "--follow-tags"]);
-            crate::last_and_history::add_to_history("git", &["push", "origin", "--tags"]);
-        } else {
-            eprintln!("🚨 Nie udało się utworzyć taga (być może taki tag już istnieje).");
-        }
+        crate::last_and_history::add_to_history("git", &["push", "origin", "main", "--follow-tags"]);
+        crate::last_and_history::add_to_history("git", &["push", "origin", "--tags"]);
     } else {
-        eprintln!("🚨 Błąd wywołania komendy git tag.");
+        eprintln!("🚨 Nie udało się utworzyć taga (być może taki tag już istnieje).");
     }
 }
 
