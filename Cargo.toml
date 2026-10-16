@@ -2,7 +2,7 @@
 
 [package]
 name = "cargo-x-do"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Jan Roman Cisowski „j-Cis” <code@cisowscy.com>"]
 edition = "2024"
 description = "Instant single-key TUI developer task runner, diagnostics, and code snapshot tool for Cargo."

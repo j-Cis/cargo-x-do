@@ -306,7 +306,9 @@ fn tag_release_with_hash(is_dry_run: bool) {
     let _ = terminal::disable_raw_mode();
     let _ = execute!(std::io::stdout(), cursor::Show);
 
-    println!("\r\n📝 Wprowadź/wklej wiadomość commita (naciśnij Enter w pustej linii, aby zakończyć):");
+    println!("\r\n📝 Wprowadź/wklej wiadomość commita.");
+    println!("👉 Gdy skończysz, w nowej linii wpisz `END` i naciśnij Enter:\r\n");
+
     let mut lines = Vec::new();
     let stdin = std::io::stdin();
 
@@ -316,9 +318,12 @@ fn tag_release_with_hash(is_dry_run: bool) {
             break;
         }
         let trimmed = buffer.trim_end_matches(['\r', '\n']);
-        if trimmed.is_empty() {
-            break; // Pusta linia (podwójny Enter) kończy wklejanie
+        
+        // Jawny znacznik końca – puste linie wewnątrz tekstu są teraz w 100% bezpieczne!
+        if trimmed.trim() == "END" {
+            break;
         }
+        
         lines.push(trimmed.to_string());
     }
 
