@@ -1,9 +1,5 @@
-# cargo-x-do / cargo x
 
-Oto kompletna, zaktualizowana wersja dokumentu `README.md` uwzględniająca nowości: historię komend opartą na `inquire`, kreator instalacyjny (opcja `[s]`) z budową zagnieżdżonego pliku konfiguracyjnego `[snapshot]` obsługiwanego przez zmodyfikowany `querypath_snapshot`.
-
-```markdown
-# 🚀 cargo-x-do
+# 🚀 cargo-x-do / cargo x
 
 [![Crates.io](https://img.shields.io/crates/v/cargo-x-do.svg)](https://crates.io/crates/cargo-x-do)
 [![Downloads](https://img.shields.io/crates/d/cargo-x-do.svg)](https://crates.io/crates/cargo-x-do)

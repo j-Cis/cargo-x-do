@@ -294,44 +294,83 @@ fn render_project_grid() -> Result<Option<(ProjectAction, bool)>> {
 // ==========================================
 
 fn tag_release_with_hash(is_dry_run: bool) {
-	let version = match read_cargo_version() {
-		Some(v) => v,
-		None => {
-			eprintln!("🚨 Nie udało się odczytać wersji z Cargo.toml");
-			return;
-		}
-	};
+    let version = match read_cargo_version() {
+        Some(v) => v,
+        None => {
+            eprintln!("🚨 Nie udało się odczytać wersji z Cargo.toml");
+            return;
+        }
+    };
 
-	let hash_out = Command::new("git").args(["rev-parse", "--short", "HEAD"]).output();
-	let hash = match hash_out {
-		Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout).trim().to_string(),
-		_ => {
-			eprintln!("🚨 Błąd pobierania hasha z git rev-parse");
-			return;
-		}
-	};
+    let commit_msg = match inquire::Text::new("Wprowadź wiadomość commita wydania (np. 'docs: ...'):")
+        .with_default(&format!("Release v{}", version))
+        .prompt()
+    {
+        Ok(msg) => msg.trim().to_string(),
+        Err(_) => {
+            println!("Anulowano proces wydania.");
+            return;
+        }
+    };
 
-	let tag_name = format!("v{}-{}", version, hash);
-	let tag_msg = format!("Release v{} hash: {}", version, hash);
+    if is_dry_run {
+        println!("> [DRY RUN] 🔒 Wykonałbym pełen łańcuch wydania:");
+        println!("  git add .");
+        println!("  git commit -m \"{}\"", commit_msg);
+        println!("  $hash = git rev-parse --short HEAD");
+        println!("  git tag -a \"v{}-$hash\" -m \"Release v{} hash: $hash\"", version, version);
+        println!("  git push origin main --follow-tags");
+        println!("  git push origin --tags\r\n");
+        return;
+    }
 
-	if is_dry_run {
-		println!("> [DRY RUN] 🔒 Wykonałbym:");
-		println!("  git tag -a \"{}\" -m \"{}\"", tag_name, tag_msg);
-		println!("  git push origin --tags\r\n");
-		return;
-	}
+    println!("📥 Dodawanie plików (git add .)...");
+    let _ = Command::new("git").args(["add", "."]).status();
 
-	println!("🏷️ Tworzenie taga: {}", tag_name);
-	let status_tag = Command::new("git").args(["tag", "-a", &tag_name, "-m", &tag_msg]).status();
+    println!("📝 Zapisywanie commita (git commit)...");
+    let commit_status = Command::new("git")
+        .args(["commit", "-m", &commit_msg])
+        .status();
 
-	if let Ok(st) = status_tag
-		&& st.success()
-	{
-		println!("🚀 Wysyłanie tagów na zdalne repozytorium (git push origin --tags)...");
-		let _ = Command::new("git").args(["push", "origin", "--tags"]).status();
-	} else {
-		eprintln!("🚨 Nie udało się utworzyć taga (być może taki tag już istnieje).");
-	}
+    if commit_status.is_err() || !commit_status.unwrap().success() {
+        eprintln!("⚠️ Nie udało się utworzyć commita (być może nie ma żadnych zmian). Próbuję kontynuować tagowanie...");
+    }
+
+    let hash_out = Command::new("git").args(["rev-parse", "--short", "HEAD"]).output();
+    let hash = match hash_out {
+        Ok(out) if out.status.success() => {
+            String::from_utf8_lossy(&out.stdout).trim().to_string()
+        }
+        _ => {
+            eprintln!("🚨 Błąd pobierania hasha z git rev-parse");
+            return;
+        }
+    };
+
+    let tag_name = format!("v{}-{}", version, hash);
+    let tag_msg = format!("Release v{} hash: {}", version, hash);
+
+    println!("🏷️ Tworzenie taga: {}", tag_name);
+    let status_tag = Command::new("git")
+        .args(["tag", "-a", &tag_name, "-m", &tag_msg])
+        .status();
+
+    if let Ok(st) = status_tag {
+        if st.success() {
+            println!("🚀 Wysyłanie gałęzi głównej wraz z powiązanymi tagami (git push origin main --follow-tags)...");
+            let _ = Command::new("git").args(["push", "origin", "main", "--follow-tags"]).status();
+
+            println!("🚀 Weryfikacja wysłania wszystkich tagów (git push origin --tags)...");
+            let _ = Command::new("git").args(["push", "origin", "--tags"]).status();
+
+            crate::last_and_history::add_to_history("git", &["push", "origin", "main", "--follow-tags"]);
+            crate::last_and_history::add_to_history("git", &["push", "origin", "--tags"]);
+        } else {
+            eprintln!("🚨 Nie udało się utworzyć taga (być może taki tag już istnieje).");
+        }
+    } else {
+        eprintln!("🚨 Błąd wywołania komendy git tag.");
+    }
 }
 
 fn bump_cargo_version(is_dry_run: bool) {
